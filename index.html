@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Card Dealer API</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --dealer-red: #430505;
+        }
+
+        /* ---------- HEADER ---------- */
+        .header-glow {
+            background: linear-gradient(135deg, #430505, #8b0000);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            border-bottom: 3px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .header-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: 3px;
+            color: #fff;
+            animation: glowPulse 3s infinite;
+        }
+
+        .header-subtitle {
+            margin-top: 6px;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        @keyframes glowPulse {
+            0% { text-shadow: 0 0 8px rgb(255, 255, 255), 0 0 12px rgba(165,42,42,0.6); }
+            50% { text-shadow: 0 0 15px rgba(255,255,255,0.6), 0 0 25px rgba(165,42,42,1); }
+            100% { text-shadow: 0 0 8px rgba(255,255,255,0.3), 0 0 12px rgba(165,42,42,0.6); }
+        }
+
+        /* ---------- BODY ---------- */
+        body {
+            background: radial-gradient(circle at top, #0fb30f 0%, #056405 70%);
+            color: #f8f8f8;
+            min-height: 100vh;
+        }
+
+        /* ---------- CARDS ---------- */
+        .card-info {
+            background-color: rgba(96, 116, 98, 0.233);
+            border: 2px solid var(--dealer-red);
+        }
+
+        .card-container {
+            width: 170px;
+            height: 240px;
+            background: white;
+            border-radius: 8px;
+            border: 4px solid #f8f8f8;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+            margin: auto;
+            overflow: hidden;
+        }
+
+        .card-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* ---------- BUTTONS ---------- */
+        .btn-primary {
+            background-color: var(--dealer-red);
+            border-color: var(--dealer-red);
+        }
+
+        .btn-primary:hover {
+            background-color: #A52A2A;
+        }
+
+        .btn-secondary {
+            background-color: #A52A2A;
+            border-color: #A52A2A;
+        }
+
+        .btn-secondary:hover {
+            background-color: #430505;
+        }
+
+        /* ---------- GUIDELINE ---------- */
+        .guideline-box {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px dashed rgba(255, 255, 255, 0.3);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.6);
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="container-fluid py-4 header-glow">
+    <div class="container text-center">
+        <div class="header-title">♠ CARD DEALER API ♣</div>
+        <div class="header-subtitle">Draw • Shuffle • Search Cards</div>
+    </div>
+</div>
+
+<!-- DRAW + SEARCH -->
+<div class="container mt-5">
+    <div class="card card-info rounded-5 p-4 mx-auto text-center" style="max-width: 700px">
+        <h5 class="mb-3">Draw a Random Card</h5>
+
+        <div class="d-flex justify-content-center gap-3 mb-0">
+            <button class="btn btn-primary rounded-pill px-4" onclick="drawCard()">DRAW</button>
+            <button class="btn btn-secondary rounded-pill px-4" onclick="getNewDeck()">NEW DECK</button>
+        </div>
+
+        <hr class="text-secondary">
+
+        <h5 class="mb-3">Search for a Specific Card</h5>
+
+        <div class="input-group">
+            <input type="text"
+                   class="form-control text-uppercase"
+                   id="cardSearchInput"
+                   placeholder="Enter Card Code (e.g., KH)">
+            <button class="btn btn-primary" onclick="searchSpecificCard()">SEARCH</button>
+        </div>
+    </div>
+</div>
+
+<!-- GUIDELINE OUTSIDE -->
+<div class="container mt-3">
+    <div class="card guideline-box rounded-5 p-3 mx-auto text-center" style="max-width: 700px">
+        <div class="fw-bold mb-2">Card Code Guide</div>
+        <div class="small text-secondary">
+            <div><strong>Values:</strong> 2–9, 0 (10), J, Q, K, A</div>
+            <div class="mt-1"><strong>Suits:</strong> S ♠, H ♥, D ♦, C ♣</div>
+            <div class="mt-2 fst-italic text-warning">
+                Example: KH = King of Hearts
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CARD DISPLAY -->
+<div class="container mt-3">
+    <div class="card card-info text-center p-5 rounded-5 shadow mx-auto" style="max-width: 700px">
+        <div class="card-container mb-3">
+            <img id="cardImg" src="https://deckofcardsapi.com/static/img/back.png">
+        </div>
+
+        <div id="cardValue" class="h5">Click DRAW or SEARCH</div>
+        <div id="remainingCount" class="small text-secondary mt-2">
+            Deck ID: N/A | Cards Left: N/A
+        </div>
+        <div id="messageArea" class="small mt-3"></div>
+    </div>
+</div>
+
+<!-- SCRIPT -->
+<script>
+    const API_BASE_URL = 'https://deckofcardsapi.com/api/deck/';
+    let deckId = null;
+
+    const cardImg = document.getElementById('cardImg');
+    const cardValue = document.getElementById('cardValue');
+    const remaining = document.getElementById('remainingCount');
+    const message = document.getElementById('messageArea');
+    const searchInput = document.getElementById('cardSearchInput');
+
+    async function getNewDeck() {
+        const res = await fetch(API_BASE_URL + 'new/shuffle/?deck_count=1');
+        const data = await res.json();
+        deckId = data.deck_id;
+        remaining.textContent = ` Cards Left: ${data.remaining}`;
+        message.textContent = "New deck ready.";
+    }
+
+    async function drawCard() {
+        if (!deckId) await getNewDeck();
+        const res = await fetch(`${API_BASE_URL}${deckId}/draw/?count=1`);
+        const data = await res.json();
+        const card = data.cards[0];
+        cardImg.src = card.image;
+        cardValue.textContent = `${card.value} of ${card.suit}`;
+        remaining.textContent = `Deck ID: ${deckId} | Cards Left: ${data.remaining}`;
+    }
+
+    async function searchSpecificCard() {
+        const code = searchInput.value.trim().toUpperCase();
+        if (!code) return;
+        const res = await fetch(`${API_BASE_URL}new/shuffle/?cards=${code}`);
+        const data = await res.json();
+        const draw = await fetch(`${API_BASE_URL}${data.deck_id}/draw/?count=1`);
+        const result = await draw.json();
+        const card = result.cards[0];
+        cardImg.src = card.image;
+        cardValue.textContent = `${card.value} of ${card.suit}`;
+        message.textContent = `Found ${card.value} of ${card.suit}`;
+        searchInput.value = "";
+    }
+
+    window.onload = getNewDeck;
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
