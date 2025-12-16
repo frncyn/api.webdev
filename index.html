@@ -96,6 +96,21 @@
             border: 1px dashed rgba(255, 255, 255, 0.3);
             box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.6);
         }
+
+        .guideline-text {
+            color: #f8f8f8;
+        }
+
+        .guideline-text strong {
+            color: #ffcc00;
+        }
+
+        .guideline-title {
+            color: #ffffff;
+            font-size: 1.05rem;
+            letter-spacing: 1px;
+        }
+
     </style>
 </head>
 
@@ -119,7 +134,7 @@
             <button class="btn btn-secondary rounded-pill px-4" onclick="getNewDeck()">NEW DECK</button>
         </div>
 
-        <hr class="text-secondary">
+        <hr class="border-light opacity-50">
 
         <h5 class="mb-3">Search for a Specific Card</h5>
 
@@ -135,14 +150,15 @@
 
 <!-- GUIDELINE OUTSIDE -->
 <div class="container mt-3">
-    <div class="card guideline-box rounded-5 p-3 mx-auto text-center" style="max-width: 700px">
-        <div class="fw-bold mb-2">Card Code Guide</div>
-        <div class="small text-secondary">
+    <div class="card guideline-box rounded-5 p-4 mx-auto text-center" style="max-width: 700px">
+        <div class="guideline-title fw-bold mb-2">
+            Card Code Guide
+        </div>
+
+        <div class="small guideline-text">
             <div><strong>Values:</strong> 2–9, 0 (10), J, Q, K, A</div>
             <div class="mt-1"><strong>Suits:</strong> S ♠, H ♥, D ♦, C ♣</div>
-            <div class="mt-2 fst-italic text-warning">
-                Example: KH = King of Hearts
-            </div>
+            <div class="mt-2 fst-italic text-warning">Example: KH = King of Hearts</div>
         </div>
     </div>
 </div>
@@ -155,9 +171,7 @@
         </div>
 
         <div id="cardValue" class="h5">Click DRAW or SEARCH</div>
-        <div id="remainingCount" class="small text-secondary mt-2">
-            Deck ID: N/A | Cards Left: N/A
-        </div>
+        <div id="remainingCount" class="small text-light mt-2">Deck ID: N/A | Cards Left: N/A</div>
         <div id="messageArea" class="small mt-3"></div>
     </div>
 </div>
@@ -174,11 +188,26 @@
     const searchInput = document.getElementById('cardSearchInput');
 
     async function getNewDeck() {
-        const res = await fetch(API_BASE_URL + 'new/shuffle/?deck_count=1');
-        const data = await res.json();
-        deckId = data.deck_id;
-        remaining.textContent = ` Cards Left: ${data.remaining}`;
-        message.textContent = "New deck ready.";
+        try {
+            message.textContent = "Shuffling new deck...";
+            cardImg.src = "https://deckofcardsapi.com/static/img/back.png";
+            cardValue.textContent = "Deck Ready!";
+            remaining.textContent = "Cards Left: 52";
+            searchInput.value = "";
+
+            const res = await fetch(API_BASE_URL + 'new/shuffle/?deck_count=1');
+            const data = await res.json();
+
+            if (!data.success) throw new Error("Failed to create new deck");
+
+            deckId = data.deck_id;
+            remaining.textContent = `Deck ID: ${deckId} | Cards Left: ${data.remaining}`;
+            message.textContent = "New deck shuffled successfully.";
+
+        } catch (error) {
+            message.textContent = "Error creating new deck.";
+            console.error(error);
+        }
     }
 
     async function drawCard() {
